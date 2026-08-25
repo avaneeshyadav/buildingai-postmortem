@@ -1,7 +1,8 @@
 import Groq from 'groq-sdk';
 import type { TimelineEvent, PostMortemDraft } from '../types';
 
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = process.env.GROQ_MODEL ?? 'qwen/qwen3.6-27b';
+const MAX_TIMELINE_EVENTS = 30;
 
 let groq: Groq | null = null;
 
@@ -12,61 +13,34 @@ function getGroq(): Groq {
   return groq;
 }
 
-const SYSTEM_PROMPT = `You are an expert site reliability engineer writing incident post-mortems.
-Given a chronological timeline of events from Slack messages, PagerDuty log entries, and GitHub commits/deployments, produce a structured post-mortem draft.
+const SYSTEM_PROMPT = `You are an SRE writing a post-mortem. Output ONLY a raw JSON object with no markdown, no explanation, no code fences.
 
-Rules:
-- Only use information present in the provided timeline. Do not invent facts.
-- For "rootCauseCandidates": every item MUST be framed as a hypothesis or candidate. Use phrases like "Hypothesis:", "Possible cause:", "Candidate:". Never state a root cause as confirmed fact unless the timeline directly and unambiguously confirms it.
-- For "timeline": condense to key turning points only — do not include every Slack message verbatim.
-- For "impact": describe who or what was affected and for how long.
-- For "actionItems": make items specific and actionable.
-- If the data is insufficient to draw a conclusion, say so explicitly rather than guessing.`;
+Example output format:
+{"summary":"Brief 2-3 sentence incident summary.","impact":"Who was affected and for how long.","timeline":["Event 1","Event 2"],"rootCauseCandidates":["Hypothesis: possible cause"],"actionItems":["Fix X","Monitor Y"]}
 
-const TOOL_DEFINITION: Groq.Chat.ChatCompletionTool = {
-  type: 'function',
-  function: {
-    name: 'create_postmortem',
-    description: 'Create a structured incident post-mortem draft from timeline data',
-    parameters: {
-      type: 'object',
-      properties: {
-        summary: {
-          type: 'string',
-          description: '2-3 sentence summary of the incident',
-        },
-        impact: {
-          type: 'string',
-          description: 'Who and what was affected, and for how long',
-        },
-        timeline: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Key events in chronological order (condensed, not every message)',
-        },
-        rootCauseCandidates: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Root cause hypotheses/candidates — must be framed as hypotheses, not confirmed facts',
-        },
-        actionItems: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Specific, actionable follow-up items',
-        },
-      },
-      required: ['summary', 'impact', 'timeline', 'rootCauseCandidates', 'actionItems'],
-    },
-  },
-};
+Rules: rootCauseCandidates must start with "Hypothesis:" or "Candidate:". timeline should be condensed key events only.`;
 
 function formatTimeline(events: TimelineEvent[]): string {
-  return events
-    .map((e) => {
-      const ts = e.timestamp.toISOString();
-      return `[${ts}] [${e.source.toUpperCase()}] ${e.content}`;
-    })
+  const trimmed =
+    events.length > MAX_TIMELINE_EVENTS
+      ? [...events.slice(0, 10), ...events.slice(-(MAX_TIMELINE_EVENTS - 10))]
+      : events;
+
+  return trimmed
+    .map((e) => `[${e.timestamp.toISOString()}][${e.source.toUpperCase()}] ${e.content.slice(0, 150)}`)
     .join('\n');
+}
+
+function extractJson(text: string): string {
+  // Strip markdown code fences if present
+  const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+  // Find the outermost { ... } block
+  const start = stripped.indexOf('{');
+  const end = stripped.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error(`No JSON object found in LLM response: ${text.slice(0, 300)}`);
+  }
+  return stripped.slice(start, end + 1);
 }
 
 export async function draftPostMortem(timeline: TimelineEvent[]): Promise<PostMortemDraft> {
@@ -74,22 +48,28 @@ export async function draftPostMortem(timeline: TimelineEvent[]): Promise<PostMo
 
   const response = await getGroq().chat.completions.create({
     model: MODEL,
-    tools: [TOOL_DEFINITION],
-    tool_choice: { type: 'function', function: { name: 'create_postmortem' } },
+    max_tokens: 800,
+    temperature: 0.1,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       {
         role: 'user',
-        content: `Here is the incident timeline:\n\n${timelineText}\n\nGenerate a structured post-mortem draft.`,
+        content: `Timeline:\n${timelineText}\n\nOutput the JSON post-mortem now.`,
       },
     ],
   });
 
-  const toolCall = response.choices[0]?.message?.tool_calls?.[0];
-  if (!toolCall || toolCall.type !== 'function') {
-    throw new Error('LLM did not return a structured tool call response');
+  const raw = response.choices[0]?.message?.content ?? '';
+  if (!raw.trim()) {
+    throw new Error('LLM returned an empty response');
   }
 
-  const draft = JSON.parse(toolCall.function.arguments) as PostMortemDraft;
+  const jsonStr = extractJson(raw);
+  const draft = JSON.parse(jsonStr) as PostMortemDraft;
+
+  if (!draft.summary || !draft.impact || !Array.isArray(draft.timeline)) {
+    throw new Error(`LLM response missing required fields. Raw: ${raw.slice(0, 300)}`);
+  }
+
   return draft;
 }

@@ -20,8 +20,9 @@ const securityHeaders = [
     // All other origins are locked down to exactly what this app uses client-side.
     value: [
       "default-src 'self'",
-      // Next.js injects inline scripts for RSC and hydration
-      "script-src 'self' 'unsafe-inline'",
+      // Next.js injects inline scripts for RSC and hydration.
+      // React dev mode requires eval() for call-stack reconstruction — safe to allow in dev only.
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ""}`,
       // Tailwind classes are applied inline; Google Fonts stylesheet
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Self-hosted Geist fonts (Next.js font optimization); Google font files fallback

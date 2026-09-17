@@ -75,7 +75,7 @@ export default function Home() {
             Setup guide
           </a>
           <a
-            href="mailto:hello@buildingai.in?subject=Postmortem Bot - Early Access"
+            href="#waitlist"
             className="bg-[#FF4D4D] hover:opacity-90 transition-opacity text-white text-sm font-semibold px-4 py-2 rounded-lg"
           >
             Request Access
@@ -104,7 +104,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <a
-              href="mailto:hello@buildingai.in?subject=Postmortem Bot - Early Access"
+              href="#waitlist"
               className="bg-[#FF4D4D] hover:opacity-88 transition-opacity text-white font-semibold px-6 py-3 rounded-lg"
             >
               Request Early Access
@@ -262,7 +262,7 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-[#1E2D45]">
+      <section id="waitlist" className="border-t border-[#1E2D45]">
         <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div>
             <h2 className="font-mono text-2xl md:text-3xl font-bold tracking-tight mb-2">
@@ -287,7 +287,7 @@ export default function Home() {
           <a href="/setup" className="hover:text-[#7A8CA8] transition-colors">Setup</a>
           <a href="https://github.com/avaneeshyadav/buildingai-postmortem" target="_blank" rel="noopener noreferrer" className="hover:text-[#7A8CA8] transition-colors">GitHub</a>
           <a href="https://buildingai.in" className="hover:text-[#7A8CA8] transition-colors">buildingai.in</a>
-          <a href="mailto:hello@buildingai.in" className="hover:text-[#7A8CA8] transition-colors">Contact</a>
+          <a href="#waitlist" className="hover:text-[#7A8CA8] transition-colors">Contact</a>
         </div>
       </footer>
     </div>

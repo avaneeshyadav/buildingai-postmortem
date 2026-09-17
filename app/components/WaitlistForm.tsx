@@ -60,11 +60,7 @@ export default function WaitlistForm() {
       </form>
       {state === 'error' ? (
         <p className="font-mono text-xs text-[#FF4D4D]">
-          // Something went wrong. Email{' '}
-          <a href="mailto:hello@buildingai.in" className="underline">
-            hello@buildingai.in
-          </a>{' '}
-          directly.
+          // Something went wrong. Please try again in a moment.
         </p>
       ) : (
         <>

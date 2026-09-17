@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 // Replace with your Formspree form ID from formspree.io (free, 50 submissions/month)
-const FORMSPREE_ID = 'YOUR_FORM_ID';
+const FORMSPREE_ID = 'mwlpkogk';
 
 type State = 'idle' | 'loading' | 'success' | 'error';
 
@@ -67,9 +67,18 @@ export default function WaitlistForm() {
           directly.
         </p>
       ) : (
-        <p className="font-mono text-xs text-[#4A5E7A]">
-          // No spam · We&apos;ll reach out when your access is ready.
-        </p>
+        <>
+          <p className="font-mono text-xs text-[#4A5E7A]">
+            // No spam · We&apos;ll reach out when your access is ready.
+          </p>
+          <p className="font-mono text-xs text-[#4A5E7A]">
+            // Your email is stored by{' '}
+            <a href="https://formspree.io/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#7A8CA8]">
+              Formspree
+            </a>
+            {' '}and used only for early-access outreach.
+          </p>
+        </>
       )}
     </div>
   );

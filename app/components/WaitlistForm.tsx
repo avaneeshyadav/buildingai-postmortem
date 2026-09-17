@@ -2,23 +2,25 @@
 
 import { useState } from 'react';
 
-// Replace with your Formspree form ID from formspree.io (free, 50 submissions/month)
-const FORMSPREE_ID = 'mwlpkogk';
+const INPUT_CLS =
+  'bg-[#131929] border border-[#1E2D45] focus:border-[#FF4D4D] outline-none text-sm text-[#E8EDF5] placeholder-[#4A5E7A] px-4 py-3 rounded-lg w-full disabled:opacity-50 transition-colors';
 
 type State = 'idle' | 'loading' | 'success' | 'error';
 
 export default function WaitlistForm() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [usecase, setUsecase] = useState('');
   const [state, setState] = useState<State>('idle');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setState('loading');
     try {
-      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ email }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, usecase }),
       });
       if (res.ok) {
         setState('success');
@@ -32,50 +34,64 @@ export default function WaitlistForm() {
 
   if (state === 'success') {
     return (
-      <span className="font-mono text-xs font-bold text-[#4ADE80] bg-[#052E16] border border-[#14532D] px-4 py-2 rounded-full">
-        ✓ You&apos;re on the list. We&apos;ll reach out shortly.
-      </span>
+      <div className="bg-[#052E16] border border-[#14532D] rounded-xl px-6 py-5 text-center">
+        <p className="font-mono text-sm font-bold text-[#4ADE80] mb-1">
+          ✓ Request received.
+        </p>
+        <p className="font-mono text-xs text-[#4ADE80]/70">
+          We&apos;ll be in touch at {email} within 24h.
+        </p>
+      </div>
     );
   }
 
+  const disabled = state === 'loading';
+
   return (
-    <div className="flex flex-col items-start gap-2">
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 w-full sm:w-auto">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email.com"
-          disabled={state === 'loading'}
-          className="bg-[#131929] border border-[#1E2D45] focus:border-[#FF4D4D] outline-none text-sm text-[#E8EDF5] placeholder-[#4A5E7A] px-4 py-3 rounded-lg w-56 disabled:opacity-50 transition-colors"
-        />
-        <button
-          type="submit"
-          disabled={state === 'loading'}
-          className="bg-[#FF4D4D] hover:opacity-90 transition-opacity text-white font-semibold text-sm px-5 py-3 rounded-lg whitespace-nowrap disabled:opacity-60"
-        >
-          {state === 'loading' ? '...' : 'Join Waitlist'}
-        </button>
-      </form>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md">
+      <input
+        type="text"
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Your name"
+        disabled={disabled}
+        className={INPUT_CLS}
+      />
+      <input
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="your@email.com"
+        disabled={disabled}
+        className={INPUT_CLS}
+      />
+      <textarea
+        required
+        rows={4}
+        value={usecase}
+        onChange={(e) => setUsecase(e.target.value)}
+        placeholder="Tell us about your team — e.g. we run on-call rotations for 10 engineers and lose post-mortems to the backlog every week."
+        disabled={disabled}
+        className={`${INPUT_CLS} resize-none`}
+      />
+      <button
+        type="submit"
+        disabled={disabled}
+        className="bg-[#FF4D4D] hover:opacity-90 transition-opacity text-white font-semibold text-sm px-5 py-3 rounded-lg w-full disabled:opacity-60"
+      >
+        {disabled ? 'Sending…' : 'Request Access'}
+      </button>
       {state === 'error' ? (
         <p className="font-mono text-xs text-[#FF4D4D]">
           // Something went wrong. Please try again in a moment.
         </p>
       ) : (
-        <>
-          <p className="font-mono text-xs text-[#4A5E7A]">
-            // No spam · We&apos;ll reach out when your access is ready.
-          </p>
-          <p className="font-mono text-xs text-[#4A5E7A]">
-            // Your email is stored by{' '}
-            <a href="https://formspree.io/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#7A8CA8]">
-              Formspree
-            </a>
-            {' '}and used only for early-access outreach.
-          </p>
-        </>
+        <p className="font-mono text-xs text-[#4A5E7A]">
+          // No spam · We&apos;ll reply within 24h with setup instructions.
+        </p>
       )}
-    </div>
+    </form>
   );
 }

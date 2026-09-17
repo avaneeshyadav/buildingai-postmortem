@@ -263,14 +263,14 @@ export default function Home() {
 
       {/* CTA */}
       <section id="waitlist" className="border-t border-[#1E2D45]">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+        <div className="max-w-lg mx-auto px-6 md:px-12 py-16 flex flex-col items-center text-center gap-8">
           <div>
             <h2 className="font-mono text-2xl md:text-3xl font-bold tracking-tight mb-2">
               Stop losing post-mortems to <span className="text-[#FF4D4D]">the backlog.</span>
             </h2>
-            <p className="text-[#7A8CA8] text-sm">Free for small teams. Runs on your existing Slack workspace.</p>
+            <p className="text-[#7A8CA8] text-sm">Free for small teams. Tell us about your setup and we&apos;ll get you onboarded.</p>
           </div>
-          <div className="flex-shrink-0">
+          <div className="w-full">
             <WaitlistForm />
           </div>
         </div>

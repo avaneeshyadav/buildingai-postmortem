@@ -29,8 +29,8 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       // Inline SVGs and data URIs only
       "img-src 'self' data:",
-      // WaitlistForm POSTs to Formspree from the browser
-      "connect-src 'self' https://formspree.io",
+      // API routes are same-origin — no external connect needed
+      "connect-src 'self'",
       // No frames, no objects, no embeds
       "frame-src 'none'",
       "object-src 'none'",

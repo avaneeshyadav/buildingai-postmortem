@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 const INPUT_CLS =
-  'bg-[#131929] border border-[#1E2D45] focus:border-[#FF4D4D] outline-none text-sm text-[#E8EDF5] placeholder-[#4A5E7A] px-4 py-3 rounded-lg w-full disabled:opacity-50 transition-colors';
+  'bg-[#0F172A] border border-[#334155] focus:border-[#6366F1] outline-none text-sm text-[#F1F5F9] placeholder-[#64748B] px-4 py-3 rounded-lg w-full disabled:opacity-50 transition-colors';
 
 type State = 'idle' | 'loading' | 'success' | 'error';
 
@@ -34,7 +34,7 @@ export default function WaitlistForm() {
 
   if (state === 'success') {
     return (
-      <div className="bg-[#052E16] border border-[#14532D] rounded-xl px-6 py-5 text-center">
+      <div className="bg-[#1E293B] border border-[#4ADE80]/30 rounded-xl px-6 py-5 text-center">
         <p className="font-mono text-sm font-bold text-[#4ADE80] mb-1">
           ✓ Request received.
         </p>
@@ -48,28 +48,30 @@ export default function WaitlistForm() {
   const disabled = state === 'loading';
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md">
-      <input
-        type="text"
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Your name"
-        disabled={disabled}
-        className={INPUT_CLS}
-      />
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="your@email.com"
-        disabled={disabled}
-        className={INPUT_CLS}
-      />
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          disabled={disabled}
+          className={INPUT_CLS}
+        />
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="work@company.com"
+          disabled={disabled}
+          className={INPUT_CLS}
+        />
+      </div>
       <textarea
         required
-        rows={4}
+        rows={3}
         value={usecase}
         onChange={(e) => setUsecase(e.target.value)}
         placeholder="Tell us about your team — e.g. we run on-call rotations for 10 engineers and lose post-mortems to the backlog every week."
@@ -79,17 +81,17 @@ export default function WaitlistForm() {
       <button
         type="submit"
         disabled={disabled}
-        className="bg-[#FF4D4D] hover:opacity-90 transition-opacity text-white font-semibold text-sm px-5 py-3 rounded-lg w-full disabled:opacity-60"
+        className="bg-indigo-600 hover:bg-indigo-500 transition-colors text-white font-semibold text-sm px-5 py-3 rounded-lg w-full disabled:opacity-60 shadow-lg shadow-indigo-500/20"
       >
-        {disabled ? 'Sending…' : 'Request Access'}
+        {disabled ? 'Sending…' : 'Automate My First Post-Mortem →'}
       </button>
       {state === 'error' ? (
-        <p className="font-mono text-xs text-[#FF4D4D]">
-          // Something went wrong. Please try again in a moment.
+        <p className="font-mono text-xs text-red-400 text-center">
+          Something went wrong. Please try again in a moment.
         </p>
       ) : (
-        <p className="font-mono text-xs text-[#4A5E7A]">
-          // No spam · We&apos;ll reply within 24h with setup instructions.
+        <p className="text-xs text-[#64748B] text-center">
+          Free during early access · No credit card · Setup in ~15 minutes
         </p>
       )}
     </form>

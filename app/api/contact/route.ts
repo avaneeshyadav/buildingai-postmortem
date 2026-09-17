@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 import { saveRequest } from '@/lib/kv';
 import { sendOwnerNotification } from '@/lib/email';
 
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(5, '1 h'),
+  prefix: 'ratelimit:contact',
+});
+
 export async function POST(req: Request): Promise<NextResponse> {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'anonymous';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();

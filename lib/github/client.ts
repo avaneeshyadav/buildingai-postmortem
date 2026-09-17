@@ -68,12 +68,22 @@ async function fetchDeployments(repo: string, since: Date, until: Date): Promise
     }));
 }
 
+// owner/repo — letters, digits, hyphens, underscores, dots only; no path traversal
+const REPO_RE = /^[a-zA-Z0-9_.\-]+\/[a-zA-Z0-9_.\-]+$/;
+
 export async function fetchGitHubEvents(since: Date, until: Date): Promise<TimelineEvent[]> {
   const reposEnv = process.env.GITHUB_REPOS ?? '';
   const repos = reposEnv
     .split(',')
     .map((r) => r.trim())
-    .filter(Boolean);
+    .filter((r) => {
+      if (!r) return false;
+      if (!REPO_RE.test(r)) {
+        console.error(`Skipping invalid GITHUB_REPOS entry: "${r}"`);
+        return false;
+      }
+      return true;
+    });
 
   const events: TimelineEvent[] = [];
 

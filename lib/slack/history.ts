@@ -15,7 +15,9 @@ let client: WebClient | null = null;
 
 function getClient(): WebClient {
   if (!client) {
-    client = new WebClient(process.env.SLACK_BOT_TOKEN);
+    const token = process.env.SLACK_BOT_TOKEN;
+    if (!token) throw new Error('SLACK_BOT_TOKEN is not configured');
+    client = new WebClient(token);
   }
   return client;
 }
@@ -28,8 +30,13 @@ export async function fetchChannelHistory(
   const oldest = String(now - windowHours * 3600);
   const latest = String(now);
 
+  // Cap pagination: 10 pages × 200 messages = 2,000 messages max.
+  // Prevents memory exhaustion and Vercel function timeouts on high-traffic channels.
+  const MAX_PAGES = 10;
+
   const events: TimelineEvent[] = [];
   let cursor: string | undefined;
+  let pages = 0;
 
   do {
     const response = await getClient().conversations.history({
@@ -39,6 +46,8 @@ export async function fetchChannelHistory(
       limit: 200,
       cursor,
     });
+
+    pages++;
 
     for (const msg of response.messages ?? []) {
       // Skip messages with discarded subtypes; keep undefined (human) and bot_message
@@ -53,7 +62,7 @@ export async function fetchChannelHistory(
     }
 
     cursor = response.response_metadata?.next_cursor ?? undefined;
-  } while (cursor);
+  } while (cursor && pages < MAX_PAGES);
 
   return events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 }

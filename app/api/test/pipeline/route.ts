@@ -3,12 +3,16 @@ import { fetchPagerDutyIncidents } from '@/lib/pagerduty/client';
 import { assembleTimeline } from '@/lib/timeline/assemble';
 import { draftPostMortem } from '@/lib/llm/draft';
 
-// TEST ONLY — remove before production or protect with a secret header
-// Usage: POST /api/test/pipeline
+// TEST ONLY — disabled in production
+// Usage: POST /api/test/pipeline with header x-test-mode: true
 // Body:  { "windowHours": 24 }   (optional, defaults to 24)
 
 export async function POST(req: Request): Promise<Response> {
-  // Basic guard — require a header so this isn't accidentally hit
+  // Disabled in production — return 404 so the route isn't discoverable
+  if (process.env.NODE_ENV === 'production') {
+    return new Response('Not Found', { status: 404 });
+  }
+
   if (req.headers.get('x-test-mode') !== 'true') {
     return new Response('Set header x-test-mode: true to use this endpoint', { status: 403 });
   }

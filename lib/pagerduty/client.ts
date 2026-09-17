@@ -12,7 +12,7 @@ async function pdFetch(path: string): Promise<unknown> {
   });
 
   if (!res.ok) {
-    throw new Error(`PagerDuty API error ${res.status}: ${await res.text()}`);
+    throw new Error(`PagerDuty API error ${res.status} on ${path}`);
   }
 
   return res.json();

@@ -67,7 +67,7 @@ async function runPipeline(
     const [slackEvents, pdResult, ghEvents] = await Promise.all([
       fetchChannelHistory(channelId, windowHours),
       fetchPagerDutyIncidents(since, until).catch((err) => {
-        console.error('PagerDuty fetch failed:', err);
+        console.error('PagerDuty fetch failed:', err instanceof Error ? err.message : String(err));
         return null;
       }),
       fetchGitHubEvents(since, until).catch((err) => {
@@ -127,7 +127,7 @@ async function runPipeline(
 
     await postToResponseUrl(responseUrl, blocks);
   } catch (err) {
-    console.error('Post-mortem pipeline failed:', err);
+    console.error('Post-mortem pipeline failed:', err instanceof Error ? err.message : String(err));
     await postErrorToResponseUrl(
       responseUrl,
       `Failed to generate post-mortem: ${err instanceof Error ? err.message : 'Unknown error'}. Check server logs for details.`
